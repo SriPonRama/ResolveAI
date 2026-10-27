@@ -2,7 +2,12 @@
 .env.*
 !.env.example
 node_modules/
+.next/
+dist/
+coverage/
 __pycache__/
 *.log
 .DS_Store
 uploads/
+*.db
+*.db-journal

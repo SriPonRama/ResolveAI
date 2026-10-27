@@ -1,0 +1,183 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Merchant {
+  id           String   @id @default(uuid())
+  name         String
+  slug         String   @unique
+  supportEmail String   @map("support_email")
+  currency     String   @default("USD")
+  timezone     String   @default("UTC")
+  mode         String   @default("shadow") // shadow | approval | auto
+  killSwitch   Boolean  @default(false)    @map("kill_switch")
+  createdAt    DateTime @default(now())    @map("created_at")
+  updatedAt    DateTime @updatedAt         @map("updated_at")
+
+  memberships       Membership[]
+  customers         Customer[]
+  orders            Order[]
+  cases             Case[]
+  policies          Policy[]
+  paypalConnection  PayPalConnection?
+
+  @@map("merchants")
+}
+
+model User {
+  id           String       @id @default(uuid())
+  email        String       @unique
+  passwordHash String       @map("password_hash")
+  name         String
+  isPlatformAdmin Boolean   @default(false) @map("is_platform_admin")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt      @map("updated_at")
+
+  memberships  Membership[]
+
+  @@map("users")
+}
+
+model Membership {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  merchantId String   @map("merchant_id")
+  role       String   @default("reviewer") // owner | reviewer | viewer
+  createdAt  DateTime @default(now())      @map("created_at")
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  merchant   Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, merchantId])
+  @@map("memberships")
+}
+
+model PayPalConnection {
+  id                   String   @id @default(uuid())
+  merchantId           String   @unique @map("merchant_id")
+  environment          String   @default("mock") // mock | sandbox | live
+  encryptedCredentials String?  @map("encrypted_credentials")
+  status               String   @default("connected")
+  lastChecked          DateTime @default(now()) @map("last_checked")
+
+  merchant             Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+
+  @@map("paypal_connections")
+}
+
+model Customer {
+  id              String   @id @default(uuid())
+  merchantId      String   @map("merchant_id")
+  email           String
+  name            String
+  refundCount90d  Int      @default(0) @map("refund_count_90d")
+  disputeCount90d Int      @default(0) @map("dispute_count_90d")
+  isBlocked       Boolean  @default(false) @map("is_blocked")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  merchant        Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  orders          Order[]
+
+  @@unique([merchantId, email])
+  @@map("customers")
+}
+
+model Order {
+  id            String      @id @default(uuid())
+  merchantId    String      @map("merchant_id")
+  customerId    String?     @map("customer_id")
+  orderNumber   String      @map("order_number")
+  paypalOrderId String?     @map("paypal_order_id")
+  captureId     String?     @map("capture_id")
+  amount        Float
+  currency      String      @default("USD")
+  status        String      @default("completed") // completed | pending | refunded
+  createdAt     DateTime    @default(now()) @map("created_at")
+
+  merchant      Merchant    @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  customer      Customer?   @relation(fields: [customerId], references: [id])
+  cases         Case[]
+  items         OrderItem[]
+
+  @@unique([merchantId, orderNumber])
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String  @id @default(uuid())
+  orderId     String  @map("order_id")
+  sku         String
+  name        String
+  quantity    Int
+  unitPrice   Float   @map("unit_price")
+
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_items")
+}
+
+model Case {
+  id             String    @id @default(uuid())
+  merchantId     String    @map("merchant_id")
+  orderId        String?   @map("order_id")
+  source         String    // complaint | dispute
+  type           String    // item_not_received | damaged | etc.
+  state          String    @default("RECEIVED") // RECEIVED | CLASSIFIED | EVIDENCE_GATHERED | DECIDED | AUTO_EXECUTED | PENDING_APPROVAL | EXECUTED | CLOSED | NEEDS_INFO | ESCALATED | REJECTED | FAILED
+  amount         Float     @default(0.0)
+  magicTokenHash String?   @map("magic_token_hash")
+  openedAt       DateTime  @default(now()) @map("opened_at")
+  dueAt          DateTime? @map("due_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt      @map("updated_at")
+
+  merchant       Merchant  @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  order          Order?    @relation(fields: [orderId], references: [id])
+
+  @@map("cases")
+}
+
+model Policy {
+  id          String   @id @default(uuid())
+  merchantId  String   @map("merchant_id")
+  version     Int      @default(1)
+  sourceText  String   @map("source_text")
+  compiledJson String  @map("compiled_json")
+  status      String   @default("published") // draft | published | archived
+  publishedBy String?  @map("published_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  merchant    Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+
+  @@map("policies")
+}
+
+model WebhookEvent {
+  id             String    @id @default(uuid())
+  provider       String    // paypal | carrier
+  eventId        String    @unique @map("event_id")
+  eventType      String    @map("event_type")
+  signatureValid Boolean   @default(false) @map("signature_valid")
+  payload        String
+  processedAt    DateTime? @map("processed_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  @@map("webhook_events")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  merchantId String?  @map("merchant_id")
+  actor      String   // system | customer | reviewer:user_id
+  event      String
+  entity     String   // case | refund | dispute | policy
+  entityId   String?  @map("entity_id")
+  details    String?  // JSON formatted details
+  timestamp  DateTime @default(now())
+
+  @@map("audit_log")
+}
