@@ -31,17 +31,18 @@ Rule: do tasks strictly in this order, one at a time. At each GATE, stop and wai
 
 **Read first:** docs/07-phases.md (Phase 0), `docs/PayPal-Findings.md`, `docs/DECISIONS.md`
 
-- [ ] **P0.1** [YOU] Create a PayPal developer account, one sandbox **business** account, one sandbox **buyer** account and a REST app (pick a country with full REST support). Put the sandbox client ID and secret in `.env` (never paste them into chat or commit them).
-- [ ] **P0.2** [YOU+AGENT] Stack decision: the agent proposes options with trade-offs for each row of `docs/DECISIONS.md`; you choose; the agent records the choices.
+- [ ] **P0.1** [DEFERRED: needs credentials] [YOU] Create a PayPal developer account, one sandbox **business** account, one sandbox **buyer** account and a REST app (pick a country with full REST support). Put the sandbox client ID and secret in `.env` (never paste them into chat or commit them).
+- [x] **P0.2** [YOU+AGENT] Stack decision: the agent proposes options with trade-offs for each row of `docs/DECISIONS.md`; you choose; the agent records the choices.
 - [ ] **P0.3** [AGENT] Scaffold the repository to match `docs/02-architecture.md`: folders, lint/format, env loading from `.env`, run instructions in `README.md`. Commit.
-- [ ] **P0.4** [AGENT] Read the current PayPal docs on developer.paypal.com. Write small runnable scripts in `scripts/paypal-sandbox/` for: access token; create order (print the buyer approval link); capture; full refund; partial refund; repeat a refund with the same request ID; add tracking. Record the doc URL used for each endpoint in `docs/PayPal-Findings.md`.
-- [ ] **P0.5** [YOU] Approve the created order as the sandbox buyer, then let the agent run the capture, refund and tracking scripts. Check the results make sense.
-- [ ] **P0.6** [YOU] Open an item-not-received dispute from the sandbox buyer account in Resolution Center.
-- [ ] **P0.7** [AGENT] Script: GET the dispute and record status, stage, requested evidence and the links offered. Try provide-evidence and make-offer at the right and the wrong stage and record the exact errors.
-- [ ] **P0.8** [AGENT] Try creating a dispute through the API. If blocked, record the error and the fallback (buyer UI).
-- [ ] **P0.9** [YOU+AGENT] Webhook: you start a public tunnel; the agent builds a stub endpoint, subscribes to dispute events, implements signature verification and tests it with the PayPal simulator.
+- [ ] **P0.4** [DEFERRED: needs credentials] [AGENT] Read the current PayPal docs on developer.paypal.com. Write small runnable scripts in `scripts/paypal-sandbox/` for: access token; create order (print the buyer approval link); capture; full refund; partial refund; repeat a refund with the same request ID; add tracking. Record the doc URL used for each endpoint in `docs/PayPal-Findings.md`.
+- [ ] **P0.5** [DEFERRED: needs credentials] [YOU] Approve the created order as the sandbox buyer, then let the agent run the capture, refund and tracking scripts. Check the results make sense.
+- [ ] **P0.6** [DEFERRED: needs credentials] [YOU] Open an item-not-received dispute from the sandbox buyer account in Resolution Center.
+- [ ] **P0.7** [DEFERRED: needs credentials] [AGENT] Script: GET the dispute and record status, stage, requested evidence and the links offered. Try provide-evidence and make-offer at the right and the wrong stage and record the exact errors.
+- [ ] **P0.8** [DEFERRED: needs credentials] [AGENT] Try creating a dispute through the API. If blocked, record the error and the fallback (buyer UI).
+- [ ] **P0.9** [DEFERRED: needs credentials] [YOU+AGENT] Webhook: you start a public tunnel; the agent builds a stub endpoint, subscribes to dispute events, implements signature verification and tests it with the PayPal simulator.
 - [ ] **P0.10** [AGENT] Re-check the current PayPal Agent Toolkit tool list from its official docs and record it.
-- [ ] **P0.11** [AGENT] Fill every row of `docs/PayPal-Findings.md` with confirmed behaviour and exact payloads. Mark each section 5 belief as confirmed or changed.
+- [ ] **P0.11** [AGENT] Fill `docs/PayPal-Findings.md` from the official PayPal docs only, and mark every row "UNVERIFIED (docs only)" with the doc URL.
+- [ ] **P0.12** [AGENT] Define a PayPalClient interface (get order/capture, refund full and partial with request-ID idempotency, add tracking, get dispute, provide evidence, make offer, accept claim, send message, verify webhook signature) and a MockPayPalClient that follows the stage rules in the official docs (for example offers only in the inquiry stage, evidence only when waiting for the seller). Add PAYPAL_MODE=mock|sandbox to `.env.example`. Add a RealPayPalClient stub that throws "needs credentials". Keep all mock code in one clearly labelled module. Every mock behaviour must cite its doc URL in `docs/PayPal-Findings.md`.
 
 **Acceptance (all must be shown to pass):**
 - [ ] You have personally seen refund, tracking and dispute-open work in the sandbox, and evidence submission either work or be documented as blocked with a fallback.
@@ -209,6 +210,8 @@ Rule: do tasks strictly in this order, one at a time. At each GATE, stop and wai
 
 **Acceptance (all must be shown to pass):**
 - [ ] A sandbox dispute produces a case with a correct checklist; the reviewer approves; the evidence is submitted through the Disputes API; the case updates when PayPal sends the next event.
+
+- [ ] **REALITY CHECK** [YOU+AGENT] With real sandbox credentials, run the deferred P0 tasks, compare real behaviour with the mock, and fix every difference.
 
 **GATE M6 Disputes (Case 3):** stop. Summarise what works, show evidence (test output, screenshots, IDs), list anything not done, and wait for me to say "gate passed".
 

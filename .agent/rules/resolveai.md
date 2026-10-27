@@ -18,5 +18,6 @@
 - Every database query is scoped by merchant_id. Enforce roles on the server.
 - Never commit secrets. Use .env and keep .env.example updated.
 - Sandbox only. No real-money calls.
+- In MOCK MODE all PayPal results are simulated. The UI must show a 'Simulated PayPal' badge. Never present mock refund IDs or dispute IDs as real.
 - For anything touching more than 3 files, show a plan first and wait for approval.
 - Write tests for each module and run them before reporting done.
