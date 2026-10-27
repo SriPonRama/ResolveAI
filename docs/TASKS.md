@@ -40,7 +40,7 @@ Rule: do tasks strictly in this order, one at a time. At each GATE, stop and wai
 - [ ] **P0.7** [DEFERRED: needs credentials] [AGENT] Script: GET the dispute and record status, stage, requested evidence and the links offered. Try provide-evidence and make-offer at the right and the wrong stage and record the exact errors.
 - [ ] **P0.8** [DEFERRED: needs credentials] [AGENT] Try creating a dispute through the API. If blocked, record the error and the fallback (buyer UI).
 - [ ] **P0.9** [DEFERRED: needs credentials] [YOU+AGENT] Webhook: you start a public tunnel; the agent builds a stub endpoint, subscribes to dispute events, implements signature verification and tests it with the PayPal simulator.
-- [ ] **P0.10** [AGENT] Re-check the current PayPal Agent Toolkit tool list from its official docs and record it.
+- [x] **P0.10** [AGENT] Re-check the current PayPal Agent Toolkit tool list from its official docs and record it.
 - [ ] **P0.11** [AGENT] Fill `docs/PayPal-Findings.md` from the official PayPal docs only, and mark every row "UNVERIFIED (docs only)" with the doc URL.
 - [ ] **P0.12** [AGENT] Define a PayPalClient interface (get order/capture, refund full and partial with request-ID idempotency, add tracking, get dispute, provide evidence, make offer, accept claim, send message, verify webhook signature) and a MockPayPalClient that follows the stage rules in the official docs (for example offers only in the inquiry stage, evidence only when waiting for the seller). Add PAYPAL_MODE=mock|sandbox to `.env.example`. Add a RealPayPalClient stub that throws "needs credentials". Keep all mock code in one clearly labelled module. Every mock behaviour must cite its doc URL in `docs/PayPal-Findings.md`.
 

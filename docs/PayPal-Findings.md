@@ -16,7 +16,7 @@ Rule: if it is not confirmed here, do not assume it.
 | Create dispute via API possible? | | | | |
 | Webhook events and signature verification | | | | |
 | Sandbox country and currency used | | | | |
-| MCP/toolkit dispute tools available | | | | |
+| MCP/toolkit dispute tools available | Check available dispute functions (list, get, accept, evidence, offer) | Confirmed (https://github.com/paypal/agent-toolkit) | Only 3 dispute tools exist: `list_disputes`, `get_dispute`, `accept_dispute_claim`. NO `provide_evidence` or `make_offer` tool exists. Direct REST Disputes API is required. | 2026-10-27 |
 
 ---
 ## Beliefs from the plan (unverified, to confirm in Phase 0)
